@@ -1,12 +1,5 @@
 # Ignore MySQL socket file
-order-service/mysql/mysql.sock
-inventory-service/docker/mysql/*
-order-service/mysql/*
-order-service/target/*
-product-service/data/*
 
-# Allow the mysql directory to remain
-!inventory-service/docker/mysql/
 
 # Maven specific files
 target/
@@ -23,7 +16,6 @@ build/
 !gradle-wrapper.jar
 # Ignore Gradle cache and user-specific files
 **/build/
-.gradle/
 **/.gradle/
 **/out/
 .gradle/*
