@@ -30,7 +30,7 @@ public class User {
     private String fullName;
 
     @Column(nullable = false)
-    private String roles = "ROLE_USER"; // comma-separated if multiple
+    private String roles = "USER"; // comma-separated if multiple
 
     private boolean enabled = true;
     private boolean accountLocked = false;

@@ -4,7 +4,7 @@ CREATE TABLE users
     email                 VARCHAR(255) NOT NULL UNIQUE,
     password_hash         VARCHAR(255) NOT NULL,
     full_name             VARCHAR(255),
-    roles                 VARCHAR(255) NOT NULL DEFAULT 'USER',
+    roles                 VARCHAR(255) NOT NULL DEFAULT 'USER_ROLE',
     enabled               BOOLEAN      NOT NULL DEFAULT true,
     account_locked        BOOLEAN      NOT NULL DEFAULT false,
     failed_login_attempts INT          NOT NULL DEFAULT 0,
