@@ -35,7 +35,7 @@ server:
   port: ${SERVER_PORT:8081}
 
 jwt:
-  issuer: ${JWT_ISSUER:https://auth.mycompany.com}
+  issuer: ${JWT_ISSUER:https://auth.mr.com}
   private-key-path: ${JWT_PRIVATE_KEY_PATH:classpath:keys/private_key_pkcs8.pem}
   public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public_key.pem}
   key-id: ${JWT_KEY_ID:default-key}
