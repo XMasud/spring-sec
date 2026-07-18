@@ -1,0 +1,18 @@
+spring:
+  jpa:
+    show-sql: false
+
+jwt:
+  # In prod, point this at a mounted secret volume, NOT the packaged classpath file
+  private-key-path: ${JWT_PRIVATE_KEY_PATH:classpath:keys/private_key_pkcs8.pem}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH:classpath:keys/public_key.pem}
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+logging:
+  level:
+    root: WARN
+    com.mycompany.auth: INFO
