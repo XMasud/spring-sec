@@ -14,7 +14,7 @@ public class GatewayRoutesConfig {
                 .route("auth-service", r-> r
                         .path("/api/auth/**")
                         .filters(f -> f.rewritePath("/api/auth/(?<segment>.*)", "/auth/${segment}"))
-                        .uri("${services.auth-service.uri}")
+                        .uri("lb://AUTH-SERVICE")
                 ).build();
     }
 }

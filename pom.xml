@@ -13,6 +13,7 @@
     <modules>
         <module>auth-service</module>
         <module>api-gateway</module>
+        <module>eureka-server</module>
         <!-- <module>jobs-service</module> add this once created -->
     </modules>
 
