@@ -8,10 +8,12 @@ CREATE TABLE transactions
     user_id           UUID                     NOT NULL,
     source_account_id VARCHAR(64)              NOT NULL,
     target_account_id VARCHAR(64)              NOT NULL,
+    idempotency_key   VARCHAR(64)              NOT NULL UNIQUE,
     amount            NUMERIC(18, 4)           NOT NULL,
     currency          VARCHAR(3)               NOT NULL,
     status            VARCHAR(32)              NOT NULL DEFAULT 'PENDING',
     risk_score        NUMERIC(3, 2)            NULL,
+    version           INTEGER                  NOT NULL DEFAULT 0,
     created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -41,12 +43,13 @@ CREATE TABLE transaction_metadata
 -- ==========================================
 CREATE TABLE transactional_outbox
 (
-    id           UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
-    aggregate_id VARCHAR(64)              NOT NULL,
-    event_type   VARCHAR(64)              NOT NULL,
-    payload      JSONB                    NOT NULL,
-    created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    processed    BOOLEAN                  NOT NULL DEFAULT FALSE
+    id            UUID PRIMARY KEY                  DEFAULT gen_random_uuid(),
+    aggregate_id  VARCHAR(64)              NOT NULL,
+    event_type    VARCHAR(64)              NOT NULL,
+    partition_key VARCHAR(64)              NOT NULL,
+    payload       JSONB                    NOT NULL,
+    created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    processed     BOOLEAN                  NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX idx_outbox_unprocessed ON transactional_outbox (processed, created_at) WHERE processed = FALSE;
@@ -55,7 +58,8 @@ CREATE INDEX idx_outbox_unprocessed ON transactional_outbox (processed, created_
 -- Trigger to automatically update updated_at
 -- ==========================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-    RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS
+$$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
@@ -63,6 +67,7 @@ END;
 $$ language 'plpgsql';
 
 CREATE TRIGGER update_transactions_updated_at
-    BEFORE UPDATE ON transactions
+    BEFORE UPDATE
+    ON transactions
     FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();

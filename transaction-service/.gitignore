@@ -17,7 +17,28 @@ target/
 .idea
 *.iws
 *.iml
-*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+
+# ==========================
+# Maven Wrapper (optional)
+# ==========================
+.mvn/wrapper/maven-wrapper.jar
+
+# ==========================
+# Environment Files
+# ==========================
+.env
+.env.*
+!.env.example
+
+# Local configuration
+application-local.yml
+application-local.yaml
+application-dev-local.yml
+application-dev-local.yaml
 
 ### NetBeans ###
 /nbproject/private/
