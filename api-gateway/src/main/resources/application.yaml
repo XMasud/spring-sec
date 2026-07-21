@@ -5,6 +5,14 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   cloud:
     gateway:
+      routes:
+        - id: auth-service-route
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**, /.well-known/jwks.json
+          filters:
+            - RewritePath=/api/(?<segment>.*), /$\\{segment}
+      # ---------------------------
       default-filters:
         - name: RequestRateLimiter
           args:
@@ -21,7 +29,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: ${AUTH_SERVICE_JWKS_URI:http://localhost:8081/.well-known/jwks.json}
+          jwk-set-uri: ${AUTH_SERVICE_JWKS_URI:http://localhost:4000/.well-known/jwks.json}
   data:
     redis:
       host: ${REDIS_HOST:localhost}
