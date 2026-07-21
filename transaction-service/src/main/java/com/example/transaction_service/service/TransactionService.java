@@ -6,19 +6,23 @@ import com.example.transaction_service.dto.TransactionResponse;
 import com.example.transaction_service.entity.OutboxEvent;
 import com.example.transaction_service.entity.Transaction;
 import com.example.transaction_service.entity.TransactionMetadata;
+import com.example.transaction_service.entity.TransactionStatus;
 import com.example.transaction_service.repository.OutboxEventRepository;
 import com.example.transaction_service.repository.TransactionRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.databind.ObjectMapper;
+
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
@@ -26,15 +30,15 @@ public class TransactionService {
     private final ObjectMapper objectMapper;
 
     @Transactional
-    public TransactionResponse createTransaction(UUID userId, String idempotencyKey, TransactionRequest request){
+    public TransactionResponse createTransaction(UUID userId, String idempotencyKey, TransactionRequest request) throws JsonProcessingException {
 
         var existing = transactionRepository.findByIdempotencyKey(idempotencyKey);
         if (existing.isPresent()) {
+            log.info("Idempotent request hit for key: {}. Returning existing transaction.", idempotencyKey);
             return toResponse(existing.get());
         }
 
         Transaction txn = getTransaction(userId, idempotencyKey, request);
-
         transactionRepository.save(txn);
 
         OutboxEvent event = new OutboxEvent();
@@ -42,7 +46,9 @@ public class TransactionService {
         event.setPartitionKey(txn.getSourceAccountId()); // fraud rules key on the SOURCE account
         event.setEventType("TRANSACTION_CREATED");
         event.setPayload(serializePayload(txn));
-        outboxEventRepository.save(event);
+
+        OutboxEvent savedEvent = outboxEventRepository.save(event);
+        log.info("Saved OutboxEvent ID: {} for Transaction ID: {}", savedEvent.getId(), txn.getId()); // 👈 Log verification
 
         return toResponse(txn);
 
@@ -55,7 +61,7 @@ public class TransactionService {
         txn.setTargetAccountId(request.targetAccountId());
         txn.setAmount(request.amount());
         txn.setCurrency(request.currency());
-        txn.setStatus("PENDING");
+        txn.setStatus(TransactionStatus.PENDING);
         txn.setIdempotencyKey(idempotencyKey);
 
         TransactionMetadata metadata = new TransactionMetadata();
@@ -69,7 +75,7 @@ public class TransactionService {
         return txn;
     }
 
-    private String serializePayload(Transaction txn) {
+    private String serializePayload(Transaction txn) throws JsonProcessingException {
         return objectMapper.writeValueAsString(
                 new TransactionCreatedEvent(
                         txn.getId(), txn.getUserId(), txn.getSourceAccountId(),
@@ -88,7 +94,7 @@ public class TransactionService {
                 txn.getTargetAccountId(),
                 txn.getAmount(),
                 txn.getCurrency(),
-                txn.getStatus(),
+                txn.getStatus() != null ? txn.getStatus().getCode() : null,
                 txn.getRiskScore(),
                 txn.getCreatedAt()
         );

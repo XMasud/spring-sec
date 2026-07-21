@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnTransformer;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -28,6 +29,7 @@ public class TransactionMetadata {
     private String deviceFingerprint;
 
     @Column(name = "ip_address", nullable = false, columnDefinition = "inet")
+    @ColumnTransformer(write = "?::inet")
     private String ipAddress;
 
     private BigDecimal latitude;

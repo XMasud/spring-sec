@@ -21,23 +21,32 @@ public class OutboxPoller {
     private final OutboxEventRepository outboxEventRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
-    @Scheduled(fixedDelay = 500) // poll every 500ms
+    @Scheduled(fixedDelay = 1000) // Runs every 1 second
     @Transactional
-    public void publishPendingEvents() {
-        List<OutboxEvent> pending = outboxEventRepository
-                .findTop100ByProcessedFalseOrderByCreatedAtAsc();
+    public void processOutboxEvents() {
 
-        for (OutboxEvent event : pending) {
+        var pendingEvents = outboxEventRepository.findByProcessedFalseOrderByIdAsc();
+
+        if (!pendingEvents.isEmpty()) {
+            log.info("Found {} pending outbox events to publish", pendingEvents.size());
+        }
+
+        for (var event : pendingEvents) {
             try {
+                // Send payload to Kafka topic "transactions.raw"
                 kafkaTemplate.send("transactions.raw", event.getPartitionKey(), event.getPayload())
-                        .get(5, TimeUnit.SECONDS); // synchronous wait — simple and correct for a poller batch
+                        .whenComplete((result, ex) -> {
+                            if (ex == null) {
+                                log.info("Successfully published outbox event [{}] to Kafka topic transactions.raw", event.getId());
+                            } else {
+                                log.error("Failed to publish outbox event [{}] to Kafka", event.getId(), ex);
+                            }
+                        });
 
                 event.setProcessed(true);
                 outboxEventRepository.save(event);
             } catch (Exception e) {
-                // Leave processed=false — next poll cycle retries automatically.
-                // Log it; don't let one bad event stop the whole batch.
-                log.error("Failed to publish outbox event {}", event.getId(), e);
+                log.error("Error dispatching outbox event [{}]", event.getId(), e);
             }
         }
     }

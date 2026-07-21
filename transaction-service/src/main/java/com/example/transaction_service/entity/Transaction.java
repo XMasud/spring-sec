@@ -38,7 +38,7 @@ public class Transaction {
     private String currency;
 
     @Column(nullable = false)
-    private String status = "PENDING";
+    private TransactionStatus status = TransactionStatus.PENDING;
 
     @Column(name = "risk_score", precision = 3, scale = 2)
     private BigDecimal riskScore;

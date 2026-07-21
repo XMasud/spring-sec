@@ -1,17 +1,15 @@
-package com.example.transaction_service;
+package com.example.fraud_rules_engine;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableScheduling
-public class TransactionServiceApplication {
+public class FraudRulesEngineApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(TransactionServiceApplication.class, args);
+		SpringApplication.run(FraudRulesEngineApplication.class, args);
 	}
 
 }
